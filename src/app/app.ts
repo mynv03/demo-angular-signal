@@ -5,10 +5,16 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { BehaviorSubject, combineLatest, debounceTime, delay, map, Observable, of, Subject, switchMap, takeUntil, tap } from 'rxjs';
 
+interface Vehicle {
+  id: number;
+  name: string;
+  price: number;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, FormsModule],
+  imports: [RouterOutlet, FormsModule, DecimalPipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   styles: [`
@@ -22,8 +28,35 @@ import { BehaviorSubject, combineLatest, debounceTime, delay, map, Observable, o
     }
   `]
 })
+
 export class App {
   protected readonly title = signal('Demo Angular Signal');
+
+  quantity = signal<number>(1);
+  qtyAvailable = signal([1, 2, 3, 4, 5, 6]);
+
+  selectedVehicle = signal<Vehicle>({ id: 1, name: 'AT-AT', price: 10000 });
+
+  vehicles = signal<Vehicle[]>([]);
+
+  exPrice = computed(() => this.selectedVehicle().price * this.quantity());
+  color = computed(() => (this.exPrice() > 50000 ? 'green' : 'blue'));
+  qtyEff = effect(() => console.log('Latest quantity:', this.quantity()));
+
+  constructor() {
+    console.log(this.quantity());
+    this.qtyEff;
+    // Two for one sale
+    this.quantity.update((qty) => qty * 2);
+
+    // effect(() => console.log(JSON.stringify(this.vehicles())));
+  }
+
+
+  onQuantitySelected(qty: number) {
+    this.quantity.set(qty);
+  }
+
   //Issue 1: Derive value from Signal and BehaviorSubject
   // countSignal = signal(1);
   // countBehaviorSubject = new BehaviorSubject(1);
